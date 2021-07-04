@@ -14,14 +14,16 @@ $ npm run start
 http://localhost:4000/docs/
 ```
 
-## ** Migration **
+## テーブル削除後、再作成
 
 ```bash
 $ npm install
 
 $ npm run build
 
-$ npx typeorm migration:run
+$ npx typeorm schema:drop
+
+$ npx typeorm schema:sync
 ```
 
 ## Installation
