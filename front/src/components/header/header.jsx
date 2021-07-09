@@ -27,9 +27,9 @@ function Header() {
         <HeaderStyle className="header">
             <div className="header-title">gnkr-side-project</div>
             <div className="header-nav">
-                <a href="#" className="header-nav__home">Home</a>
-                <a href="#" className="header-nav__sign-in">Sign in</a>
-                <a href="#" className="header-nav__sign-up">Sign up</a>
+                <a href="!#" className="header-nav__home">Home</a>
+                <a href="!#" className="header-nav__sign-in">Sign in</a>
+                <a href="!#" className="header-nav__sign-up">Sign up</a>
             </div>
         </HeaderStyle>
     );
