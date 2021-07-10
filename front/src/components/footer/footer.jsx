@@ -23,7 +23,7 @@ const FooterStyle = styled.footer`
 function Footer() {
     return (
         <FooterStyle>
-            <a className="footer" href="#">gnkr-side-project</a><span className="footer__text">cheer up create this project</span>            
+            <a className="footer" href="!#">gnkr-side-project</a><span className="footer__text">cheer up create this project</span>            
         </FooterStyle>
     );
 }

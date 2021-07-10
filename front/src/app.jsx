@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Feed from './components/contents/feed/feed';
 import Tag from './components/contents/tag/tag';
 import Nav from './components/nav/nav';
@@ -18,34 +18,14 @@ const AppStyle = styled.section`
     }
 `
 
-function App() {
+function App({ feed }) {
 
-const [feeds, setFeeds] = useState([
-    {
-        id: '1',
-        user: 'cho',
-        image: '😄',
-        date: '2021',
-        title: 'Title',
-        description: 'test description', 
-    },
-    {
-        id: '2',
-        user: 'you',
-        image: '😝',
-        date: '2021',
-        title: 'Title2',
-        description: 'test description2', 
-    },
-    {
-        id: '3',
-        user: 'kim',
-        image: null,
-        date: '2021',
-        title: 'Title3',
-        description: 'test description3', 
-    },
-]); 
+const [feeds, setFeeds] = useState([]);
+
+useEffect(() => {
+    feed.getAllFeeds()
+    .then(feeds => setFeeds(feeds));
+}, [feed]); 
 
     return (
         <AppStyle className="main">
@@ -54,9 +34,7 @@ const [feeds, setFeeds] = useState([
             <Nav/>
             <div className='main_contain'>
                 <ul>
-                    {feeds.map(feed => (
-                        <Feed feed={feed} />
-                    ))}
+                    {feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
                 </ul>
                <Tag/>
             </div>
