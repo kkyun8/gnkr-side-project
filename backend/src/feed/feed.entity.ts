@@ -39,6 +39,9 @@ export class Feed {
   @JoinTable()
   tags: Tag[];
 
+  @ManyToMany((type) => User, (user) => user.favorite)
+  favorite: User[];
+
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

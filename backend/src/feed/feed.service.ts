@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Repository, Connection } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feed } from 'src/feed/feed.entity';
 import { Tag } from 'src/tags/tag.entity';
-import { PaginationDto, FeedPaginated } from 'src/dto/pagenation';
+import { User } from 'src/user/user.entity';
+import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
 
 @Injectable()
@@ -13,24 +14,52 @@ export class FeedService {
     private readonly feedRepository: Repository<Feed>,
     @InjectRepository(Tag)
     private readonly tagRepository: Repository<Tag>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
-  async readFeedList(paginationDto: PaginationDto): Promise<FeedPaginated> {
-    const skippedItems = (paginationDto.page - 1) * paginationDto.limit;
-    const totalCount = await this.feedRepository.count();
-    const feed = await this.feedRepository
-      .createQueryBuilder('feed')
-      .orderBy('feed.id', 'DESC')
-      .offset(skippedItems)
-      .limit(paginationDto.limit)
-      .leftJoinAndSelect('feed.tags', 'tag')
-      .getMany();
+  async readFeedList(
+    feedPaginationDto: FeedPaginationDto,
+  ): Promise<FeedPaginated> {
+    const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
+    const { page, limit, tagId } = feedPaginationDto;
+
+    let totalCount;
+    let data;
+
+    if (!tagId) {
+      totalCount = await this.feedRepository.count();
+
+      data = await this.feedRepository
+        .createQueryBuilder('feed')
+        .orderBy('feed.id', 'DESC')
+        .offset(skippedItems)
+        .limit(limit)
+        .leftJoinAndSelect('feed.tags', 'tag')
+        .getMany();
+    } else {
+      totalCount = await this.feedRepository
+        .createQueryBuilder('feed')
+        .select('COUNT(feed.id)', 'count')
+        .innerJoinAndSelect('feed.tags', 'tag')
+        .where('tag.id = :tagId', { tagId })
+        .getCount();
+
+      data = await this.feedRepository
+        .createQueryBuilder('feed')
+        .orderBy('feed.id', 'DESC')
+        .offset(skippedItems)
+        .limit(limit)
+        .innerJoinAndSelect('feed.tags', 'tag')
+        .where('tag.id = :tagId', { tagId })
+        .getMany();
+    }
 
     return {
       totalCount,
-      page: paginationDto.page,
-      limit: paginationDto.limit,
-      data: feed,
+      page,
+      limit,
+      data,
     };
   }
 
@@ -52,7 +81,6 @@ export class FeedService {
   }
 
   async updateFeed(id: number, data: FeedDto) {
-    const { title, body, userId } = data;
     const tags = await this.tagRepository.findByIds(data.tagIds);
     const feed = await this.feedRepository.findOne(id);
     feed.tags = tags;
@@ -64,5 +92,28 @@ export class FeedService {
 
   deleteFeed(id: number) {
     return this.feedRepository.delete({ id });
+  }
+
+  async favorite(id: number, loginId: number) {
+    const user = await this.userRepository.findOne(loginId);
+    const favoriteFeedIds = user.favoriteFeedIds.slice();
+    favoriteFeedIds.push(id);
+
+    const feed = await this.feedRepository.findByIds(favoriteFeedIds);
+    user.favorite = feed;
+
+    await this.userRepository.save(user);
+    return;
+  }
+
+  async unfavorite(id: number, loginId: number) {
+    const user = await this.userRepository.findOne(loginId);
+    const favoriteFeedIds = user.favoriteFeedIds.filter((f) => f != id);
+
+    const feed = await this.feedRepository.findByIds(favoriteFeedIds);
+    user.favorite = feed;
+
+    await this.userRepository.save(user);
+    return;
   }
 }
