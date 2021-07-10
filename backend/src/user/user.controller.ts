@@ -52,7 +52,7 @@ export class UserController {
     return this.service.unFollow(loginId, followId);
   }
 
-  @Get('follow/:loginId')
+  @Get(':loginId/follow')
   readFollow(@Param('loginId') loginId: number) {
     return this.service.readFollow(loginId);
   }

@@ -9,7 +9,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { FeedService } from './feed.service';
-import { PaginationDto, FeedPaginated } from 'src/dto/pagenation';
+import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -19,16 +19,14 @@ export class FeedController {
   constructor(private readonly service: FeedService) {}
 
   @Get()
-  readFeedList(@Query() paginationDto: PaginationDto): Promise<FeedPaginated> {
-    paginationDto.page = Number(paginationDto.page);
-    paginationDto.limit = Number(paginationDto.limit);
+  readFeedList(
+    @Query() feedPaginationDto: FeedPaginationDto,
+  ): Promise<FeedPaginated> {
+    feedPaginationDto.page = Number(feedPaginationDto.page);
+    feedPaginationDto.limit = Number(feedPaginationDto.limit);
+    feedPaginationDto.tagId = Number(feedPaginationDto.tagId);
 
-    return this.service.readFeedList({
-      ...paginationDto,
-      limit: paginationDto.limit > 10 ? 10 : paginationDto.limit,
-    });
-
-    return;
+    return this.service.readFeedList(feedPaginationDto);
   }
 
   @Get(':id')
@@ -47,7 +45,17 @@ export class FeedController {
   }
 
   @Delete(':id')
-  deleteFeed(@Param('id') id) {
+  deleteFeed(@Param('id') id: number) {
     return this.service.deleteFeed(id);
+  }
+
+  @Post(':id/favorite/:loginId')
+  favoriteFeed(@Param('id') id: number, @Param('loginId') loginId: number) {
+    return this.service.favorite(id, loginId);
+  }
+
+  @Delete(':id/favorite/:loginId')
+  unFavoriteFeed(@Param('id') id: number, @Param('loginId') loginId: number) {
+    return this.service.unfavorite(id, loginId);
   }
 }
