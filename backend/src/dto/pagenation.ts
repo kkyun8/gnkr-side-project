@@ -6,6 +6,16 @@ export class PaginationDto {
   page: number;
   @ApiProperty()
   limit: number;
+  @ApiProperty()
+  tagId: number;
+}
+
+export class FeedPaginationDto extends PaginationDto {
+  @ApiProperty({
+    description: 'TagでFeedを検索する場合にtagId指定',
+    default: 0,
+  })
+  tagId: number;
 }
 
 export class PaginatedResultDto {

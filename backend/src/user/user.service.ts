@@ -87,6 +87,18 @@ export class UserService {
   }
 
   async follow(loginId: number, followId: number) {
+    //TODO: validation共通にする
+    if (loginId === followId) {
+      throw new HttpException(
+        {
+          // TODO: error msg
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Duplication error',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const loginUser = await this.userRepository.findOne(loginId);
     const followUser = await this.userRepository.findOne(followId);
 
@@ -116,6 +128,18 @@ export class UserService {
   }
 
   async unFollow(loginId: number, followId: number) {
+    //TODO: validation共通にする
+    if (loginId === followId) {
+      throw new HttpException(
+        {
+          // TODO: error msg
+          status: HttpStatus.BAD_REQUEST,
+          error: 'Duplication error',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const loginUser = await this.userRepository.findOne(loginId);
     const followUser = await this.userRepository.findOne(followId);
 
@@ -150,13 +174,13 @@ export class UserService {
       .createQueryBuilder()
       .leftJoinAndSelect('follows', 'follows', 'follows.followingId = user.id')
       .where('follows.followerId = :followerId', { followerId: loginId })
-      .getMany();
+      .getManyAndCount();
 
     const following = await this.userRepository
       .createQueryBuilder()
       .leftJoinAndSelect('follows', 'follows', 'follows.followerId = user.id')
       .where('follows.followingId = :followingId', { followingId: loginId })
-      .getMany();
+      .getManyAndCount();
 
     return { follow, following };
   }
