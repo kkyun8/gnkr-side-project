@@ -26,6 +26,19 @@ $ npx typeorm schema:drop
 $ npx typeorm schema:sync
 ```
 
+## seed実行
+
+```bash
+$ npm run build
+$ npm run seed:config
+$ npm run seed:run
+```
+
+## DBリセット＆Seed実行（Mac）
+```bash
+$ /bin/bash ./src/migrations/seeds/reset.sh
+```
+
 ## Installation
 
 ```bash
