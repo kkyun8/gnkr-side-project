@@ -7,6 +7,8 @@
   "migrations": [
       "dist/migrations/**/*.js"
   ],
+  "seeds": ["dist/migrations/seeds/**/*.js"],
+  "factories": ["dist/migrations/factories/**/*.js"],
   "logging": true,
   "synchronize": false
 }

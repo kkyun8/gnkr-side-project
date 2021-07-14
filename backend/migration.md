@@ -13,3 +13,10 @@ run
 npm run build
 npx typeorm migration:run
 ```
+
+seed
+```
+npm run build
+npm run seed:config
+npm run seed:run
+```

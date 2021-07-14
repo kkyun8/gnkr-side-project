@@ -6,7 +6,7 @@ import { User } from './user.entity';
 import { UserDto } from 'src/dto/user';
 import { HttpException } from '@nestjs/common/exceptions/http.exception';
 import { Follows } from './follows.entity';
-const saltOrRounds = 10;
+export const saltOrRounds = 10;
 
 @Injectable()
 export class UserService {
@@ -37,6 +37,7 @@ export class UserService {
       );
     }
 
+    // TODO: set entity
     const hash = await bcrypt.hash(password, saltOrRounds);
     return this.userRepository.save({ email, password: hash, name });
   }
