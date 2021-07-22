@@ -16,6 +16,11 @@ export class FeedPaginationDto extends PaginationDto {
     default: 0,
   })
   tagId: number;
+  @ApiProperty({
+    description: 'UserでFeedを検索する場合にuserId指定',
+    default: 0,
+  })
+  userId: number;
 }
 
 export class PaginatedResultDto {
