@@ -25,6 +25,7 @@ export class FeedController {
     feedPaginationDto.page = Number(feedPaginationDto.page);
     feedPaginationDto.limit = Number(feedPaginationDto.limit);
     feedPaginationDto.tagId = Number(feedPaginationDto.tagId);
+    feedPaginationDto.userId = Number(feedPaginationDto.userId);
 
     return this.service.readFeedList(feedPaginationDto);
   }

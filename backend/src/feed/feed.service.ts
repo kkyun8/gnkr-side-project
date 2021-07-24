@@ -22,38 +22,47 @@ export class FeedService {
     feedPaginationDto: FeedPaginationDto,
   ): Promise<FeedPaginated> {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
-    const { page, limit, tagId } = feedPaginationDto;
+    const { page, limit, tagId, userId } = feedPaginationDto;
 
-    let totalCount;
-    let data;
+    const count = this.feedRepository
+      .createQueryBuilder('feed')
+      .select('COUNT(feed.id)', 'count');
 
-    if (!tagId) {
-      totalCount = await this.feedRepository.count();
+    const feed = this.feedRepository
+      .createQueryBuilder('feed')
+      .orderBy('feed.id', 'DESC')
+      .offset(skippedItems)
+      .limit(limit);
 
-      data = await this.feedRepository
-        .createQueryBuilder('feed')
-        .orderBy('feed.id', 'DESC')
-        .offset(skippedItems)
-        .limit(limit)
+    if (!tagId && !userId) {
+      feed
         .leftJoinAndSelect('feed.tags', 'tag')
-        .getMany();
+        .leftJoinAndSelect('feed.user', 'user');
     } else {
-      totalCount = await this.feedRepository
-        .createQueryBuilder('feed')
-        .select('COUNT(feed.id)', 'count')
-        .innerJoinAndSelect('feed.tags', 'tag')
-        .where('tag.id = :tagId', { tagId })
-        .getCount();
+      if (tagId) {
+        feed
+          .innerJoinAndSelect('feed.tags', 'tag')
+          .where('tag.id = :tagId', { tagId });
 
-      data = await this.feedRepository
-        .createQueryBuilder('feed')
-        .orderBy('feed.id', 'DESC')
-        .offset(skippedItems)
-        .limit(limit)
-        .innerJoinAndSelect('feed.tags', 'tag')
-        .where('tag.id = :tagId', { tagId })
-        .getMany();
+        count
+          .innerJoinAndSelect('feed.tags', 'tag')
+          .where('tag.id = :tagId', { tagId });
+      }
+
+      if (userId) {
+        feed
+          .innerJoinAndSelect('feed.user', 'user')
+          .where('user.id = :userId', { userId });
+
+        count
+          .innerJoinAndSelect('feed.user', 'user')
+          .where('user.id = :userId', { userId });
+      }
     }
+
+    const totalCount = await count.getCount();
+
+    const data = await feed.getMany();
 
     return {
       totalCount,
