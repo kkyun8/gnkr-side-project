@@ -5,12 +5,17 @@ const HeaderStyle = styled.header`
     display: flex;
     justify-content: space-around;
     align-content: center;
+    padding: 0.5rem 1rem;
     .header-title {
-        color: #3CB371;
+        font-size: 1.5rem !important;
+        color: #5cb85c;
+        text-decoration: none !important;
+        cursor: pointer;
     }
     a { 
-        text-decoration:none;
-        color: darkgray; 
+        font-size: 1.0rem !important;
+        text-decoration:none !important;
+        color: rgba(0,0,0,0.3);; 
         font-size: 0.7rem;
     } 
     .header-nav__home {
