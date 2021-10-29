@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Feed from './components/contents/feed/feed';
 import Tag from './components/contents/tag/tag';
 import Nav from './components/nav/nav';
@@ -24,11 +24,17 @@ const AppStyle = styled.section`
 
 function App() {
     const feeds = useSelector(state => state.reducers);
+    //ネット通信時データの読み込みのところ使うLoadingState
+    const [loading, setLoading] = useState(true); 
     
     const dispatch = useDispatch();
+
      useEffect(() => {
+        setLoading(true);
         dispatch(getAllFeeds());
+        setLoading(false);
     }, [dispatch]); 
+
     return (
         <AppStyle className="main">
             <Header/>
@@ -37,7 +43,8 @@ function App() {
             <div className='main_contain'>
                 <section className='feed_contain'>
                     <ul>
-                        {feeds && feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
+                        {loading ? <h1>Now Loading......</h1> : feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
+                        {/* {feeds && feeds.map(feed => <Feed key={feed.id} feed={feed} />)} */}
                     </ul>
                 </section>
                <Tag/>

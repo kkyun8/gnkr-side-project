@@ -8,6 +8,8 @@ const FeedStyle = styled.li`
     border-bottom: 1px solid darkgray;
     padding: 1.5rem 0.5rem;
     width: 100%
+    cursor: pointer;
+    
     p {
         margin: 0;
     }
@@ -30,6 +32,16 @@ const FeedStyle = styled.li`
         display: flex;
     }
     
+    .feed__info_name {
+        margin: 0;
+        padding-left: 0.5rem;
+    }
+
+    .feed__info_date {
+        margin: 0;
+        padding-left: 0.5rem;
+    }
+
     .feed__title {
         margin: 0;
     }
@@ -55,8 +67,10 @@ function Feed({ feed }) {
             <div className="feed__meta">
                 <div className="feed__info">
                     <img className="image" src={imageUrl} alt="profile_image" />
-                    <p>{user.name}</p>
-                    <p>{createdAt}</p>
+                    <div>
+                        <p className="feed__info_name">{user.name}</p>
+                        <p className="feed__info_date">{createdAt}</p>
+                    </div>
                 </div>
                 <div>
                 <h1 className="feed__title">{title}</h1>
