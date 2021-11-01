@@ -4,10 +4,12 @@ import Tag from './components/contents/tag/tag';
 import Nav from './components/nav/nav';
 import Footer from './components/footer/footer';
 import Header from './components/header/header'; 
-import Banner from './components/banner/banner'; 
+import Banner from './components/banner/banner';
+import Loading from './components/common/loading'; 
 import styled from 'styled-components';
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFeeds } from './actions/feeds';
+
 
 const AppStyle = styled.section`
     background-color: #fff;
@@ -43,8 +45,7 @@ function App() {
             <div className='main_contain'>
                 <section className='feed_contain'>
                     <ul>
-                        {loading ? <h1>Now Loading......</h1> : feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
-                        {/* {feeds && feeds.map(feed => <Feed key={feed.id} feed={feed} />)} */}
+                        {loading ? <Loading/> : feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
                     </ul>
                 </section>
                <Tag/>

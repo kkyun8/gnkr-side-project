@@ -26,7 +26,7 @@ const BannerStyle = styled.section`
 function Banner() {
     return (
         <BannerStyle>
-            <h1>gnkr-side-project banner</h1>
+            <h1>gnkr-side-project</h1>
             <p>cheer up create this project</p>
         </BannerStyle>
     );
