@@ -26,17 +26,15 @@ const AppStyle = styled.section`
 
 function App() {
     const feeds = useSelector(state => state.reducers);
-    //ネット通信時データの読み込みのところ使うLoadingState
-    const [loading, setLoading] = useState(true); 
-    
+     
+    const { isLoading, data } = feeds;
     const dispatch = useDispatch();
 
-     useEffect(() => {
-        setLoading(true);
+    useEffect(() => {
         dispatch(getAllFeeds());
-        setLoading(false);
+        
     }, [dispatch]); 
-
+    
     return (
         <AppStyle className="main">
             <Header/>
@@ -45,7 +43,7 @@ function App() {
             <div className='main_contain'>
                 <section className='feed_contain'>
                     <ul>
-                        {loading ? <Loading/> : feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
+                        {isLoading ? <Loading/> : data?.map(feed => <Feed key={feed.id} feed={feed} />)}
                     </ul>
                 </section>
                <Tag/>

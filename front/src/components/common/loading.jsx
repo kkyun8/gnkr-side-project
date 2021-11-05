@@ -32,7 +32,7 @@ const LoadingStyle = styled.div`
         top:6px;
         border-radius: 50%;
     }
-    @-webkit-keyframes rotation {
+    @keyframes rotation {
         from {
         -webkit-transform: rotate(270deg);
         }
