@@ -2,15 +2,22 @@ import React from 'react';
 import styled from 'styled-components';
 
 const BannerStyle = styled.section`
-    background-color: olivedrab;
+    background-color: #5cb85c;
     width: 100%;
     text-align: center;
     padding: 2rem;
     h1 {
-        padding-bottom: 0.5rem;
+        text-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+        font-weight: 700!important;
+        text-align: center;
+        font-size: 3.5rem;
+        color: #fff;
+        margin: 0;
     }
-    h1, p {
-        color: white;
+    p {
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 300!important;
         margin: 0;
     }
     
@@ -19,7 +26,7 @@ const BannerStyle = styled.section`
 function Banner() {
     return (
         <BannerStyle>
-            <h1>gnkr-side-project banner</h1>
+            <h1>gnkr-side-project</h1>
             <p>cheer up create this project</p>
         </BannerStyle>
     );

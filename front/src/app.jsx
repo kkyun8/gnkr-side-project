@@ -4,38 +4,48 @@ import Tag from './components/contents/tag/tag';
 import Nav from './components/nav/nav';
 import Footer from './components/footer/footer';
 import Header from './components/header/header'; 
-import Banner from './components/banner/banner'; 
+import Banner from './components/banner/banner';
+import Loading from './components/common/loading'; 
 import styled from 'styled-components';
+import { useDispatch, useSelector } from "react-redux";
+import { getAllFeeds } from './actions/feeds';
+
 
 const AppStyle = styled.section`
-    background-color: mintcream;
-    height: 100vh;
+    background-color: #fff;
     .main_contain {
         display: flex;
         justify-content: space-around;
         align-content: center;
-        height: 100vh;
+    }
+    .feed_contain{
+        margin: 0 5rem;
+        width: 50%;
     }
 `
 
-function App({ feed }) {
+function App() {
+    const feeds = useSelector(state => state.reducers);
+     
+    const { isLoading, data } = feeds;
+    const dispatch = useDispatch();
 
-const [feeds, setFeeds] = useState([]);
-
-useEffect(() => {
-    feed.getAllFeeds()
-    .then(feeds => setFeeds(feeds));
-}, [feed]); 
-
+    useEffect(() => {
+        dispatch(getAllFeeds());
+        
+    }, [dispatch]); 
+    
     return (
         <AppStyle className="main">
             <Header/>
             <Banner/>
             <Nav/>
             <div className='main_contain'>
-                <ul>
-                    {feeds.map(feed => <Feed key={feed.id} feed={feed} />)}
-                </ul>
+                <section className='feed_contain'>
+                    <ul>
+                        {isLoading ? <Loading/> : data?.map(feed => <Feed key={feed.id} feed={feed} />)}
+                    </ul>
+                </section>
                <Tag/>
             </div>
             <Footer/>

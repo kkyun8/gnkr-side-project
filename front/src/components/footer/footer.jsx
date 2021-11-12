@@ -5,16 +5,16 @@ import styled from 'styled-components';
 const FooterStyle = styled.footer`
     display: flex;
     background-color: whitesmoke;
-    justify-content: space-around;
     align-content: center;
+    padding: 1rem 0;
     a { 
         text-decoration:none;
-        color: #3CB371;
-        font-size: 0.6rem;
+        color: #5cb85c;;
+        font-size: 1rem;
     } 
     .footer__text {
         color: darkgray;
-        font-size: 0.6rem;
+        font-size: 1rem;
     }
     
 `;
@@ -23,7 +23,7 @@ const FooterStyle = styled.footer`
 function Footer() {
     return (
         <FooterStyle>
-            <a className="footer" href="!#">gnkr-side-project</a><span className="footer__text">cheer up create this project</span>            
+            <a className="footer" href="!#"><b>gnkr-side-project</b></a><span className="footer__text">cheer up create this project</span>            
         </FooterStyle>
     );
 }

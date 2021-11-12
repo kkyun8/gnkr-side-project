@@ -1,20 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './app';
-import axios from 'axios';
-import FeedRepository from './service/feed_repository';
-
-const feedClient = axios.create(
-  {
-    //baseURL: 'http://localhost:4000/',
-    withCredentials: true,
-  }
-);
-const feed = new FeedRepository(feedClient);
+import { Provider } from 'react-redux';
+import store from './store';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App feed={ feed }/>
+    <Provider store={store}>
+      <App/>
+    </Provider>
   </React.StrictMode>,
   document.getElementById('root')
 );
