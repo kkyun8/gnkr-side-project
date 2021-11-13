@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 const HeaderStyle = styled.header`
@@ -33,7 +34,8 @@ function Header() {
             <div className="header-title">gnkr-side-project</div>
             <div className="header-nav">
                 <a href="!#" className="header-nav__home">Home</a>
-                <a href="!#" className="header-nav__post">New Post</a>
+                <Link to="/editor/new" className="header-nav__post" >New Post</Link>
+                {/* <a href="!#" className="header-nav__post">New Post</a> */}
                 <a href="!#" className="header-nav__sign-in">Sign in</a>
                 <a href="!#" className="header-nav__sign-up">Sign up</a>
             </div>
