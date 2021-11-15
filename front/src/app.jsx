@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { Routes, Route, Link } from "react-router-dom";
 import Feed from './components/contents/feed/feed';
 import Tag from './components/contents/tag/tag';
 import Nav from './components/nav/nav';
@@ -9,6 +10,8 @@ import Loading from './components/common/loading';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from "react-redux";
 import { getAllFeeds } from './actions/feeds';
+import Editor from './components/editor/editor';
+import Main from './components/main/main';
 
 
 const AppStyle = styled.section`
@@ -17,6 +20,7 @@ const AppStyle = styled.section`
         display: flex;
         justify-content: space-around;
         align-content: center;
+        height: 100vh;
     }
     .feed_contain{
         margin: 0 5rem;
@@ -26,10 +30,10 @@ const AppStyle = styled.section`
 
 function App() {
     const feeds = useSelector(state => state.reducers);
-     
+
     const { isLoading, data } = feeds;
     const dispatch = useDispatch();
-
+    
     useEffect(() => {
         dispatch(getAllFeeds());
         
@@ -38,16 +42,10 @@ function App() {
     return (
         <AppStyle className="main">
             <Header/>
-            <Banner/>
-            <Nav/>
-            <div className='main_contain'>
-                <section className='feed_contain'>
-                    <ul>
-                        {isLoading ? <Loading/> : data?.map(feed => <Feed key={feed.id} feed={feed} />)}
-                    </ul>
-                </section>
-               <Tag/>
-            </div>
+            <Routes>
+                <Route path="/" element={ <Main loading = {isLoading} data = {data} /> } />
+                <Route path="editor/new" element={ <Editor /> } />
+            </Routes>
             <Footer/>
         </AppStyle>
     );

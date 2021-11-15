@@ -3,14 +3,15 @@ import React from 'react';
 import styled from 'styled-components';
 
 const FooterStyle = styled.footer`
-    display: flex;
+    
     background-color: whitesmoke;
-    align-content: center;
-    padding: 1rem 0;
+    padding: 1rem 15rem;
+    
     a { 
         text-decoration:none;
         color: #5cb85c;;
         font-size: 1rem;
+        margin-right: 0.5rem;
     } 
     .footer__text {
         color: darkgray;
