@@ -35,6 +35,7 @@ export default class CreateDatas implements Seeder {
       .map(async (feed: Feed) => {
         feed.title = `${feed.title}${findex}`;
         feed.body = `${feed.body}${findex}`;
+        feed.description = `${feed.title}-description-${findex}`;
         findex++;
         return feed;
       })

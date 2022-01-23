@@ -18,6 +18,9 @@ export class Feed {
   @Column({ length: 500 })
   title: string;
 
+  @Column({ nullable: true })
+  description: string;
+
   @Column('text')
   body: string;
 
