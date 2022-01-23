@@ -68,6 +68,8 @@ export class FeedService {
       totalCount,
       page,
       limit,
+      tagId,
+      userId,
       data,
     };
   }

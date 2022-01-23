@@ -29,6 +29,11 @@ export class PaginatedResultDto {
   readonly totalCount: number;
 }
 
-export class FeedPaginated extends PaginatedResultDto {
+export class FeedPaginatedResultDto extends PaginatedResultDto {
+  readonly tagId: number;
+  readonly userId: number;
+}
+
+export class FeedPaginated extends FeedPaginatedResultDto {
   data: Feed[];
 }
