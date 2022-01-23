@@ -72,8 +72,13 @@ export class FeedService {
     };
   }
 
-  readFeed(id: number) {
-    return this.feedRepository.findOne({ id });
+  async readFeed(id: number) {
+    return this.feedRepository
+      .createQueryBuilder('feed')
+      .where('feed.id = :id', { id })
+      .leftJoinAndSelect('feed.tags', 'tag')
+      .innerJoinAndSelect('feed.user', 'user')
+      .getOne();
   }
 
   async createFeed(data: FeedDto) {
