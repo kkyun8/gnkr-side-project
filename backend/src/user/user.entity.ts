@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Feed } from 'src/feed/feed.entity';
+import { Comment } from 'src/comment/comment.entity';
 
 @Entity()
 export class User {
@@ -44,6 +45,12 @@ export class User {
   })
   @JoinTable()
   feed: Feed[];
+
+  @OneToMany((type) => Comment, (comment) => comment.user, {
+    onDelete: 'CASCADE',
+  })
+  @JoinTable()
+  comment: Comment[];
 
   @RelationId((user: User) => user.feed)
   feedIds: number[];

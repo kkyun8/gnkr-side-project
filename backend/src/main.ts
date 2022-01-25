@@ -12,6 +12,7 @@ async function bootstrap() {
     .addTag('feed')
     .addTag('user')
     .addTag('tags')
+    .addTag('comment')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -4,54 +4,34 @@ import {
   PrimaryGeneratedColumn,
   BeforeUpdate,
   ManyToOne,
-  ManyToMany,
-  JoinTable,
-  OneToMany,
 } from 'typeorm';
+import { Feed } from 'src/feed/feed.entity';
 import { User } from 'src/user/user.entity';
-import { Tag } from 'src/tags/tag.entity';
-import { Comment } from 'src/comment/comment.entity';
 
 @Entity()
-export class Feed {
+export class Comment {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column({ length: 500 })
-  title: string;
-
-  @Column({ nullable: true })
-  description: string;
 
   @Column('text')
   body: string;
 
   @Column()
   userId: number;
+  @Column()
+  feedId: number;
 
-  @ManyToOne((type) => User, (user) => user.feed, {
-    nullable: false,
+  @ManyToOne(() => Feed, (feed) => feed.comment, {
+    // foreign key constraint failed 対応
+    onDelete: 'CASCADE',
+  })
+  feed: Feed;
+
+  @ManyToOne(() => User, (user) => user.comment, {
     // foreign key constraint failed 対応
     onDelete: 'CASCADE',
   })
   user: User;
-
-  @ManyToMany((type) => Tag, (tag) => tag.feed, {
-    cascade: true,
-    // foreign key constraint failed 対応
-    onDelete: 'CASCADE',
-  })
-  @JoinTable()
-  tags: Tag[];
-
-  @OneToMany((type) => Comment, (comment) => comment.feed, {
-    onDelete: 'CASCADE',
-  })
-  @JoinTable()
-  comment: Comment[];
-
-  @ManyToMany((type) => User, (user) => user.favorite)
-  favorite: User[];
 
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
