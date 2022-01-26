@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Feed } from './feed.entity';
 import { Tag } from 'src/tags/tag.entity';
 import { User } from 'src/user/user.entity';
+import { Comment } from 'src/comment/comment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Feed, Tag, User])],
+  imports: [TypeOrmModule.forFeature([Feed, Tag, User, Comment])],
   controllers: [FeedController],
   providers: [FeedService],
 })
