@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Feed } from 'src/feed/feed.entity';
 import { Tag } from 'src/tags/tag.entity';
 import { User } from 'src/user/user.entity';
+import { Comment } from 'src/comment/comment.entity';
 import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
 
@@ -16,6 +17,8 @@ export class FeedService {
     private readonly tagRepository: Repository<Tag>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
   ) {}
 
   async readFeedList(
@@ -68,17 +71,38 @@ export class FeedService {
       totalCount,
       page,
       limit,
+      tagId,
+      userId,
       data,
     };
   }
 
   async readFeed(id: number) {
-    return this.feedRepository
+    const feed = await this.feedRepository
       .createQueryBuilder('feed')
       .where('feed.id = :id', { id })
       .leftJoinAndSelect('feed.tags', 'tag')
       .innerJoinAndSelect('feed.user', 'user')
       .getOne();
+
+    // TODO: error
+    if (!feed) return;
+
+    const feedId = feed.id;
+
+    // TODO: pagenation
+    const comments = await this.commentRepository
+      .createQueryBuilder('comment')
+      .innerJoinAndSelect('comment.user', 'user')
+      .where('comment.feedId = :feedId', { feedId })
+      .orderBy('comment.createdAt')
+      .getMany();
+
+    if (comments.length > 0) {
+      feed.comment = comments;
+    }
+
+    return feed;
   }
 
   async createFeed(data: FeedDto) {
