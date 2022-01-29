@@ -7,6 +7,7 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
+  RelationId,
 } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { Tag } from 'src/tags/tag.entity';
@@ -50,8 +51,12 @@ export class Feed {
   @JoinTable()
   comment: Comment[];
 
-  @ManyToMany((type) => User, (user) => user.favorite)
+  @ManyToMany((type) => User, (user) => user.favorite, {
+    onDelete: 'CASCADE',
+  })
   favorite: User[];
+
+  favoriteCount: number;
 
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
