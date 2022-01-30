@@ -7,7 +7,6 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
-  RelationId,
 } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import { Tag } from 'src/tags/tag.entity';
@@ -56,6 +55,7 @@ export class Feed {
   })
   favorite: User[];
 
+  isFavorited: boolean;
   favoriteCount: number;
 
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更

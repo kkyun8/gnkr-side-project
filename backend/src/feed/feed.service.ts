@@ -8,6 +8,24 @@ import { Comment } from 'src/comment/comment.entity';
 import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
 
+const setFavorited = async (
+  user: User,
+  repository: Repository<Feed>,
+  id: number,
+) => {
+  const feed = await repository
+    .createQueryBuilder('feed')
+    .where('feed.id = :id', { id })
+    .leftJoinAndSelect('feed.tags', 'tag')
+    .innerJoinAndSelect('feed.user', 'user')
+    .leftJoin('feed.favorite', 'favorite')
+    .loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite')
+    .getOne();
+
+  feed.isFavorited = user.favoriteFeedIds.includes(feed.id);
+  return feed;
+};
+
 @Injectable()
 export class FeedService {
   constructor(
@@ -25,7 +43,7 @@ export class FeedService {
     feedPaginationDto: FeedPaginationDto,
   ): Promise<FeedPaginated> {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
-    const { page, limit, tagId, userId } = feedPaginationDto;
+    const { page, limit, tagId, userId, loginId } = feedPaginationDto;
 
     const count = this.feedRepository
       .createQueryBuilder('feed')
@@ -37,9 +55,7 @@ export class FeedService {
       .offset(skippedItems)
       .limit(limit);
 
-    feed
-      .leftJoin('feed.favorite', 'favorite')
-      .loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite');
+    feed.loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite');
 
     if (!tagId && !userId) {
       feed
@@ -69,7 +85,18 @@ export class FeedService {
 
     const totalCount = await count.getCount();
 
-    const data = await feed.getMany();
+    let data = await feed.getMany();
+
+    if (loginId != 0) {
+      const loginUser = await this.userRepository.findOne(loginId);
+      if (loginUser) {
+        data = data.map(
+          (f) => (
+            (f.isFavorited = loginUser.favoriteFeedIds.includes(f.id)), f
+          ),
+        );
+      }
+    }
 
     return {
       totalCount,
@@ -77,11 +104,12 @@ export class FeedService {
       limit,
       tagId,
       userId,
+      loginId,
       data,
     };
   }
 
-  async readFeed(id: number) {
+  async readFeed(id: number, loginId: number) {
     const feed = await this.feedRepository
       .createQueryBuilder('feed')
       .where('feed.id = :id', { id })
@@ -106,6 +134,11 @@ export class FeedService {
 
     if (comments.length > 0) {
       feed.comment = comments;
+    }
+
+    if (loginId != 0) {
+      const loginUser = await this.userRepository.findOne(loginId);
+      feed.isFavorited = loginUser.favoriteFeedIds.includes(feed.id);
     }
 
     return feed;
@@ -140,44 +173,30 @@ export class FeedService {
 
   async favorite(id: number, loginId: number) {
     const beforeUser = await this.userRepository.findOne(loginId);
+
     const favoriteFeedIds = beforeUser.favoriteFeedIds.slice();
     favoriteFeedIds.push(id);
-
-    const feed = await this.feedRepository.findByIds(favoriteFeedIds);
-    beforeUser.favorite = feed;
+    const favoriteFeed = await this.feedRepository.findByIds(favoriteFeedIds);
+    beforeUser.favorite = favoriteFeed;
 
     const user = await this.userRepository.save(beforeUser);
 
-    const count = await this.feedRepository
-      .createQueryBuilder('feed')
-      .where('feed.id = :id', { id })
-      .leftJoin('feed.favorite', 'favorite')
-      .loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite')
-      .getOne();
+    const feed = await setFavorited(user, this.feedRepository, id);
 
-    const { favoriteCount } = count;
-
-    return { user, favoriteCount };
+    return feed;
   }
 
   async unfavorite(id: number, loginId: number) {
     const beforeUser = await this.userRepository.findOne(loginId);
-    const favoriteFeedIds = beforeUser.favoriteFeedIds.filter((f) => f != id);
 
-    const feed = await this.feedRepository.findByIds(favoriteFeedIds);
-    beforeUser.favorite = feed;
+    const favoriteFeedIds = beforeUser.favoriteFeedIds.filter((f) => f != id);
+    const favoriteFeed = await this.feedRepository.findByIds(favoriteFeedIds);
+    beforeUser.favorite = favoriteFeed;
 
     const user = await this.userRepository.save(beforeUser);
 
-    const count = await this.feedRepository
-      .createQueryBuilder('feed')
-      .where('feed.id = :id', { id })
-      .leftJoin('feed.favorite', 'favorite')
-      .loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite')
-      .getOne();
+    const feed = await setFavorited(user, this.feedRepository, id);
 
-    const { favoriteCount } = count;
-
-    return { user, favoriteCount };
+    return feed;
   }
 }
