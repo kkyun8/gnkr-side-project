@@ -8,6 +8,19 @@ import { HttpException } from '@nestjs/common/exceptions/http.exception';
 import { Follows } from './follows.entity';
 export const saltOrRounds = 10;
 
+const setIsFollowing = async (
+  followerId: number,
+  followingId: number,
+  repository: any,
+): Promise<boolean> => {
+  const follow = await repository.findOne({
+    where: { followerId, followingId },
+  });
+
+  const isFollowing = follow ? true : false;
+  return isFollowing;
+};
+
 @Injectable()
 export class UserService {
   constructor(
@@ -56,6 +69,10 @@ export class UserService {
     return this.userRepository.delete(id);
   }
 
+  async readUser(id: number) {
+    return this.userRepository.findOne(id);
+  }
+
   async login(data: UserDto): Promise<User> {
     const { email, password } = data;
     const user = await this.userRepository.findOne({ email });
@@ -84,6 +101,7 @@ export class UserService {
         HttpStatus.UNAUTHORIZED,
       );
     }
+
     return user;
   }
 
@@ -125,7 +143,14 @@ export class UserService {
       await this.followsRepository.save(follows);
     }
 
-    return;
+    const isFollowing = await setIsFollowing(
+      followerId,
+      followingId,
+      this.followsRepository,
+    );
+
+    followUser.isFollowing = isFollowing;
+    return followUser;
   }
 
   async unFollow(loginId: number, followId: number) {
@@ -167,7 +192,14 @@ export class UserService {
       await this.followsRepository.delete(id);
     }
 
-    return;
+    const isFollowing = await setIsFollowing(
+      followerId,
+      followingId,
+      this.followsRepository,
+    );
+
+    followUser.isFollowing = isFollowing;
+    return followUser;
   }
 
   async readFollow(loginId: number) {
