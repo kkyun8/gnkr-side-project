@@ -6,6 +6,7 @@ import { FeedModule } from 'src/feed/feed.module';
 import { UserModule } from './user/user.module';
 import { TagsModule } from './tags/tags.module';
 import { CommentModule } from './comment/comment.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { CommentModule } from './comment/comment.module';
     UserModule,
     TagsModule,
     CommentModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

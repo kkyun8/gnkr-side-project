@@ -69,11 +69,25 @@ export class UserService {
     return this.userRepository.delete(id);
   }
 
-  async readUser(id: number) {
-    return this.userRepository.findOne(id);
+  async readUser(id: number, loginId: number) {
+    const loginUser = await this.userRepository.findOne(loginId);
+    const user = await this.userRepository.findOne(id);
+
+    const followerId = loginUser.id;
+    const followingId = user.id;
+
+    const isFollowing = await setIsFollowing(
+      followerId,
+      followingId,
+      this.followsRepository,
+    );
+
+    user.isFollowing = isFollowing;
+    return user;
   }
 
-  async login(data: UserDto): Promise<User> {
+  // TODO: delete
+  async login(data: UserDto): Promise<{ user: User; token: string }> {
     const { email, password } = data;
     const user = await this.userRepository.findOne({ email });
 
@@ -101,8 +115,11 @@ export class UserService {
         HttpStatus.UNAUTHORIZED,
       );
     }
+    //TODO:
+    const payload = { username: user.name, sub: user.email };
+    // const token = this.jwtService.sign(payload);
 
-    return user;
+    return { user, token: 'token' };
   }
 
   async follow(loginId: number, followId: number) {
@@ -216,5 +233,31 @@ export class UserService {
       .getManyAndCount();
 
     return { follow, following };
+  }
+  async findOne(email: string, password: string): Promise<User | string> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new HttpException(
+        {
+          // TODO: error msg
+          status: HttpStatus.UNAUTHORIZED,
+          error: 'Authentication failed',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    const dbPassword = user.password;
+    const isMatch = await bcrypt.compare(password, dbPassword);
+    if (!isMatch) {
+      throw new HttpException(
+        {
+          // TODO: error msg
+          status: HttpStatus.UNAUTHORIZED,
+          error: 'Passwords do not match.',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    return user;
   }
 }
