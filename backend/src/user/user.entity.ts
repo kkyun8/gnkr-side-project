@@ -6,7 +6,6 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
-  RelationId,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Feed } from 'src/feed/feed.entity';
@@ -52,9 +51,6 @@ export class User {
   @JoinTable()
   comment: Comment[];
 
-  @RelationId((user: User) => user.feed)
-  feedIds: number[];
-
   @Exclude()
   @ManyToMany((type) => Feed, (feed) => feed.favorite, {
     cascade: true,
@@ -63,8 +59,8 @@ export class User {
   @JoinTable()
   favorite: Feed[];
 
-  @RelationId((feed: Feed) => feed.favorite)
-  favoriteFeedIds: number[];
+  isFollower: boolean;
+  isFollowing: boolean;
 
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })

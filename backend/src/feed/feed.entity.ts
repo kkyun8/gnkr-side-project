@@ -50,8 +50,13 @@ export class Feed {
   @JoinTable()
   comment: Comment[];
 
-  @ManyToMany((type) => User, (user) => user.favorite)
+  @ManyToMany((type) => User, (user) => user.favorite, {
+    onDelete: 'CASCADE',
+  })
   favorite: User[];
+
+  isFavorited: boolean;
+  favoriteCount: number;
 
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })

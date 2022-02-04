@@ -5,8 +5,35 @@ import { Feed } from 'src/feed/feed.entity';
 import { Tag } from 'src/tags/tag.entity';
 import { User } from 'src/user/user.entity';
 import { Comment } from 'src/comment/comment.entity';
+import { Follows } from 'src/user/follows.entity';
+import { UserFavoriteFeed } from './UserFavoriteFeed.entity';
 import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
+
+const setFavorited = async (
+  user: User,
+  feedRepository: Repository<Feed>,
+  userFavoriteFeedRepository: Repository<UserFavoriteFeed>,
+  id: number,
+) => {
+  const feed = await feedRepository
+    .createQueryBuilder('feed')
+    .where('feed.id = :id', { id })
+    .leftJoinAndSelect('feed.tags', 'tag')
+    .innerJoinAndSelect('feed.user', 'user')
+    .leftJoin('feed.favorite', 'favorite')
+    .loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite')
+    .getOne();
+
+  const favorite = await userFavoriteFeedRepository
+    .createQueryBuilder('userFavoriteFeedRepository')
+    .where('userId = :userId', { userId: user.id })
+    .andWhere('feedId = :feedId', { feedId: id })
+    .getOne();
+
+  feed.isFavorited = favorite ? true : false;
+  return feed;
+};
 
 @Injectable()
 export class FeedService {
@@ -19,13 +46,17 @@ export class FeedService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Follows)
+    private readonly followsRepository: Repository<Follows>,
+    @InjectRepository(UserFavoriteFeed)
+    private readonly userFavoriteFeedRepository: Repository<UserFavoriteFeed>,
   ) {}
 
   async readFeedList(
     feedPaginationDto: FeedPaginationDto,
   ): Promise<FeedPaginated> {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
-    const { page, limit, tagId, userId } = feedPaginationDto;
+    const { page, limit, tagId, userId, loginId } = feedPaginationDto;
 
     const count = this.feedRepository
       .createQueryBuilder('feed')
@@ -36,6 +67,8 @@ export class FeedService {
       .orderBy('feed.id', 'DESC')
       .offset(skippedItems)
       .limit(limit);
+
+    feed.loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite');
 
     if (!tagId && !userId) {
       feed
@@ -65,7 +98,25 @@ export class FeedService {
 
     const totalCount = await count.getCount();
 
-    const data = await feed.getMany();
+    let data = await feed.getMany();
+
+    if (loginId != 0) {
+      const loginUser = await this.userRepository.findOne(loginId);
+
+      if (loginUser) {
+        const feedIds = data.map((f) => f.id);
+        const favorite = await this.userFavoriteFeedRepository
+          .createQueryBuilder('userFavoriteFeedRepository')
+          .where('userId = :userId', { userId: loginUser.id })
+          .andWhere('feedId IN (:...feedIds)', { feedIds })
+          .getMany();
+
+        const favoriteFeedIds = favorite.map((f) => f.feedId);
+        data = data.map(
+          (f) => ((f.isFavorited = favoriteFeedIds.includes(f.id)), f),
+        );
+      }
+    }
 
     return {
       totalCount,
@@ -73,16 +124,19 @@ export class FeedService {
       limit,
       tagId,
       userId,
+      loginId,
       data,
     };
   }
 
-  async readFeed(id: number) {
+  async readFeed(id: number, loginId: number) {
     const feed = await this.feedRepository
       .createQueryBuilder('feed')
       .where('feed.id = :id', { id })
       .leftJoinAndSelect('feed.tags', 'tag')
       .innerJoinAndSelect('feed.user', 'user')
+      .leftJoin('feed.favorite', 'favorite')
+      .loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite')
       .getOne();
 
     // TODO: error
@@ -100,6 +154,29 @@ export class FeedService {
 
     if (comments.length > 0) {
       feed.comment = comments;
+    }
+
+    if (loginId != 0) {
+      const loginUser = await this.userRepository.findOne(loginId);
+      const userId = loginUser.id;
+
+      const favorite = await this.userFavoriteFeedRepository
+        .createQueryBuilder('userFavoriteFeedRepository')
+        .where('userId = :userId', { userId })
+        .andWhere('feedId = :feedId', { feedId })
+        .getOne();
+
+      feed.isFavorited = favorite ? true : false;
+
+      const followerId = loginUser.id;
+      const followingId = feed.user.id;
+
+      const follow = await this.followsRepository.findOne({
+        where: { followerId, followingId },
+      });
+
+      const isFollowing = follow ? true : false;
+      feed.user.isFollowing = isFollowing;
     }
 
     return feed;
@@ -134,24 +211,41 @@ export class FeedService {
 
   async favorite(id: number, loginId: number) {
     const user = await this.userRepository.findOne(loginId);
-    const favoriteFeedIds = user.favoriteFeedIds.slice();
-    favoriteFeedIds.push(id);
 
-    const feed = await this.feedRepository.findByIds(favoriteFeedIds);
-    user.favorite = feed;
+    const userId = user.id;
+    const feedId = id;
+    const favorite = await this.userFavoriteFeedRepository.insert({
+      userId,
+      feedId,
+    });
 
-    await this.userRepository.save(user);
-    return;
+    const feed = await setFavorited(
+      user,
+      this.feedRepository,
+      this.userFavoriteFeedRepository,
+      id,
+    );
+
+    return feed;
   }
 
   async unfavorite(id: number, loginId: number) {
     const user = await this.userRepository.findOne(loginId);
-    const favoriteFeedIds = user.favoriteFeedIds.filter((f) => f != id);
 
-    const feed = await this.feedRepository.findByIds(favoriteFeedIds);
-    user.favorite = feed;
+    const userId = user.id;
+    const feedId = id;
+    const favorite = await this.userFavoriteFeedRepository.delete({
+      userId,
+      feedId,
+    });
 
-    await this.userRepository.save(user);
-    return;
+    const feed = await setFavorited(
+      user,
+      this.feedRepository,
+      this.userFavoriteFeedRepository,
+      id,
+    );
+
+    return feed;
   }
 }

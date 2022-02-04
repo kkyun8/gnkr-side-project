@@ -30,9 +30,9 @@ export class FeedController {
     return this.service.readFeedList(feedPaginationDto);
   }
 
-  @Get(':id')
-  readFeed(@Param('id') id) {
-    return this.service.readFeed(id);
+  @Get(':id/loginId/:loginId')
+  readFeed(@Param('id') id: number, @Param('loginId') loginId: number) {
+    return this.service.readFeed(id, loginId);
   }
 
   @Post()
