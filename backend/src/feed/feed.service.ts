@@ -54,9 +54,11 @@ export class FeedService {
 
   async readFeedList(
     feedPaginationDto: FeedPaginationDto,
+    user: { userId: number; email: string },
   ): Promise<FeedPaginated> {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
-    const { page, limit, tagId, userId, loginId } = feedPaginationDto;
+    const { page, limit, tagId, userId } = feedPaginationDto;
+    const loginId = user.userId;
 
     const count = this.feedRepository
       .createQueryBuilder('feed')
@@ -124,7 +126,6 @@ export class FeedService {
       limit,
       tagId,
       userId,
-      loginId,
       data,
     };
   }
