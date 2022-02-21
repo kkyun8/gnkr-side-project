@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feed } from 'src/feed/feed.entity';
 import { Tag } from 'src/tags/tag.entity';
 import { User } from 'src/user/user.entity';
 import { Comment } from 'src/comment/comment.entity';
 import { Follows } from 'src/user/follows.entity';
-import { UserFavoriteFeed } from './UserFavoriteFeed.entity';
+import { UserFavoriteFeed } from './userFavoriteFeed.entity';
 import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
 
@@ -33,6 +33,27 @@ const setFavorited = async (
 
   feed.isFavorited = favorite ? true : false;
   return feed;
+};
+
+const saveTags = async (tagList: string[], tagRepository: Repository<Tag>) => {
+  const savedTags = await tagRepository.find({
+    name: In(tagList),
+  });
+
+  const tagNames = savedTags.map((t) => t.name);
+  const newTags = tagList.filter((t) => !tagNames.includes(t));
+
+  for (const name of newTags) {
+    const tag = new Tag();
+    tag.name = name;
+    await tagRepository.save(tag);
+  }
+
+  const tags = await tagRepository.find({
+    name: In(tagList),
+  });
+
+  return tags;
 };
 
 @Injectable()
@@ -184,12 +205,16 @@ export class FeedService {
   }
 
   async createFeed(data: FeedDto) {
-    const { title, body, userId } = data;
-    const tags = await this.tagRepository.findByIds(data.tagIds);
+    const { title, description, body, userId } = data;
+    const { tagList } = data;
+
+    const tags = await saveTags(tagList, this.tagRepository);
+
     const feed = new Feed();
 
     feed.title = title;
     feed.body = body;
+    feed.description = description;
     feed.userId = userId;
     feed.tags = tags;
 
@@ -197,8 +222,9 @@ export class FeedService {
   }
 
   async updateFeed(id: number, data: FeedDto) {
-    const tags = await this.tagRepository.findByIds(data.tagIds);
+    const { tagList } = data;
     const feed = await this.feedRepository.findOne(id);
+    const tags = await saveTags(tagList, this.tagRepository);
     feed.tags = tags;
 
     const updated = Object.assign(feed, data);
