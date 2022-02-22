@@ -8,6 +8,8 @@ export class PaginationDto {
   limit: number;
   @ApiProperty()
   tagId: number;
+  @ApiProperty()
+  isFavorite: 'true' | 'false';
 }
 
 export class FeedPaginationDto extends PaginationDto {
@@ -32,6 +34,7 @@ export class PaginatedResultDto {
 export class FeedPaginatedResultDto extends PaginatedResultDto {
   readonly tagId: number;
   readonly userId: number;
+  readonly isFavorite: boolean;
 }
 
 export class FeedPaginated extends FeedPaginatedResultDto {

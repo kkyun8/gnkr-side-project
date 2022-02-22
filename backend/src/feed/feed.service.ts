@@ -75,11 +75,10 @@ export class FeedService {
 
   async readFeedList(
     feedPaginationDto: FeedPaginationDto,
-    user: { userId: number; email: string },
+    loginId: number,
   ): Promise<FeedPaginated> {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
-    const { page, limit, tagId, userId } = feedPaginationDto;
-    const loginId = user.userId;
+    const { page, limit, tagId, userId, isFavorite } = feedPaginationDto;
 
     const count = this.feedRepository
       .createQueryBuilder('feed')
@@ -88,26 +87,18 @@ export class FeedService {
     const feed = this.feedRepository
       .createQueryBuilder('feed')
       .orderBy('feed.id', 'DESC')
-      .offset(skippedItems)
-      .limit(limit);
+      .skip(skippedItems)
+      .take(limit);
 
     feed.loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite');
 
-    if (!tagId && !userId) {
+    if (isFavorite === 'true') {
       feed
-        .leftJoinAndSelect('feed.tags', 'tag')
-        .leftJoinAndSelect('feed.user', 'user');
+        .innerJoin('feed.favorite', 'favorite')
+        .where('favorite_feed.userId = :userId', { userId })
+        .leftJoinAndSelect('feed.user', 'user')
+        .leftJoinAndSelect('feed.tags', 'tag');
     } else {
-      if (tagId) {
-        feed
-          .innerJoinAndSelect('feed.tags', 'tag')
-          .where('tag.id = :tagId', { tagId });
-
-        count
-          .innerJoinAndSelect('feed.tags', 'tag')
-          .where('tag.id = :tagId', { tagId });
-      }
-
       if (userId) {
         feed
           .innerJoinAndSelect('feed.user', 'user')
@@ -116,6 +107,20 @@ export class FeedService {
         count
           .innerJoinAndSelect('feed.user', 'user')
           .where('user.id = :userId', { userId });
+      } else {
+        feed.leftJoinAndSelect('feed.user', 'user');
+      }
+
+      if (tagId) {
+        feed
+          .innerJoinAndSelect('feed.tags', 'tag')
+          .where('tag.id = :tagId', { tagId });
+
+        count
+          .innerJoinAndSelect('feed.tags', 'tag')
+          .where('tag.id = :tagId', { tagId });
+      } else {
+        feed.leftJoinAndSelect('feed.tags', 'tag');
       }
     }
 
@@ -147,6 +152,7 @@ export class FeedService {
       limit,
       tagId,
       userId,
+      isFavorite: isFavorite === 'true',
       data,
     };
   }

@@ -28,13 +28,13 @@ export class FeedController {
     @Request() req,
     @Query() feedPaginationDto: FeedPaginationDto,
   ): Promise<FeedPaginated> {
-    const { user } = req;
+    const loginId = getLoginId(req);
     feedPaginationDto.page = Number(feedPaginationDto.page);
     feedPaginationDto.limit = Number(feedPaginationDto.limit);
     feedPaginationDto.tagId = Number(feedPaginationDto.tagId);
     feedPaginationDto.userId = Number(feedPaginationDto.userId);
 
-    return this.service.readFeedList(feedPaginationDto, user);
+    return this.service.readFeedList(feedPaginationDto, loginId);
   }
 
   @UseGuards(JwtAuthGuard)
