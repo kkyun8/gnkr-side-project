@@ -15,7 +15,7 @@ export class Tag {
   @Column({ length: 500 })
   name: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   body: string;
 
   @ManyToMany(() => Feed, (feed) => feed.tags, {

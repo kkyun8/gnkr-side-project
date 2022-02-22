@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-const uncheckList = ['/feed-GET', '/user-GET'];
+const uncheckList = ['feed-GET', 'user-GET'];
 
 export const getLoginId = (req) => {
   let loginId = 0;
@@ -24,8 +24,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   handleRequest(err, user, info, context) {
     const { pathname } = context.getRequest()._parsedUrl;
+    const firstpath = pathname.split('/')[1];
     const { method } = context.getRequest();
-    const isUnchecked = uncheckList.includes(`${pathname}-${method}`);
+    const isUnchecked = uncheckList.includes(`${firstpath}-${method}`);
 
     if (err) {
       throw err;

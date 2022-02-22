@@ -86,42 +86,6 @@ export class UserService {
     return user;
   }
 
-  // TODO: delete
-  async login(data: UserDto): Promise<{ user: User; token: string }> {
-    const { email, password } = data;
-    const user = await this.userRepository.findOne({ email });
-
-    if (!user) {
-      throw new HttpException(
-        {
-          // TODO: error msg
-          status: HttpStatus.UNAUTHORIZED,
-          error: 'Authentication failed',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-
-    const dbPassword = user.password;
-    const isMatch = await bcrypt.compare(password, dbPassword);
-
-    if (!isMatch) {
-      throw new HttpException(
-        {
-          // TODO: error msg
-          status: HttpStatus.UNAUTHORIZED,
-          error: 'Passwords do not match.',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    //TODO:
-    const payload = { username: user.name, sub: user.email };
-    // const token = this.jwtService.sign(payload);
-
-    return { user, token: 'token' };
-  }
-
   async follow(loginId: number, followId: number) {
     //TODO: validation共通にする
     if (loginId === followId) {

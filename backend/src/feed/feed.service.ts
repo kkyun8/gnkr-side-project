@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feed } from 'src/feed/feed.entity';
 import { Tag } from 'src/tags/tag.entity';
 import { User } from 'src/user/user.entity';
 import { Comment } from 'src/comment/comment.entity';
 import { Follows } from 'src/user/follows.entity';
-import { UserFavoriteFeed } from './UserFavoriteFeed.entity';
+import { UserFavoriteFeed } from './userFavoriteFeed.entity';
 import { FeedPaginationDto, FeedPaginated } from 'src/dto/pagenation';
 import { FeedDto } from 'src/dto/feed';
 
@@ -35,6 +35,27 @@ const setFavorited = async (
   return feed;
 };
 
+const saveTags = async (tagList: string[], tagRepository: Repository<Tag>) => {
+  const savedTags = await tagRepository.find({
+    name: In(tagList),
+  });
+
+  const tagNames = savedTags.map((t) => t.name);
+  const newTags = tagList.filter((t) => !tagNames.includes(t));
+
+  for (const name of newTags) {
+    const tag = new Tag();
+    tag.name = name;
+    await tagRepository.save(tag);
+  }
+
+  const tags = await tagRepository.find({
+    name: In(tagList),
+  });
+
+  return tags;
+};
+
 @Injectable()
 export class FeedService {
   constructor(
@@ -54,9 +75,10 @@ export class FeedService {
 
   async readFeedList(
     feedPaginationDto: FeedPaginationDto,
+    loginId: number,
   ): Promise<FeedPaginated> {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
-    const { page, limit, tagId, userId, loginId } = feedPaginationDto;
+    const { page, limit, tagId, userId, isFavorite } = feedPaginationDto;
 
     const count = this.feedRepository
       .createQueryBuilder('feed')
@@ -65,26 +87,18 @@ export class FeedService {
     const feed = this.feedRepository
       .createQueryBuilder('feed')
       .orderBy('feed.id', 'DESC')
-      .offset(skippedItems)
-      .limit(limit);
+      .skip(skippedItems)
+      .take(limit);
 
     feed.loadRelationCountAndMap('feed.favoriteCount', 'feed.favorite');
 
-    if (!tagId && !userId) {
+    if (isFavorite === 'true') {
       feed
-        .leftJoinAndSelect('feed.tags', 'tag')
-        .leftJoinAndSelect('feed.user', 'user');
+        .innerJoin('feed.favorite', 'favorite')
+        .where('favorite_feed.userId = :userId', { userId })
+        .leftJoinAndSelect('feed.user', 'user')
+        .leftJoinAndSelect('feed.tags', 'tag');
     } else {
-      if (tagId) {
-        feed
-          .innerJoinAndSelect('feed.tags', 'tag')
-          .where('tag.id = :tagId', { tagId });
-
-        count
-          .innerJoinAndSelect('feed.tags', 'tag')
-          .where('tag.id = :tagId', { tagId });
-      }
-
       if (userId) {
         feed
           .innerJoinAndSelect('feed.user', 'user')
@@ -93,6 +107,20 @@ export class FeedService {
         count
           .innerJoinAndSelect('feed.user', 'user')
           .where('user.id = :userId', { userId });
+      } else {
+        feed.leftJoinAndSelect('feed.user', 'user');
+      }
+
+      if (tagId) {
+        feed
+          .innerJoinAndSelect('feed.tags', 'tag')
+          .where('tag.id = :tagId', { tagId });
+
+        count
+          .innerJoinAndSelect('feed.tags', 'tag')
+          .where('tag.id = :tagId', { tagId });
+      } else {
+        feed.leftJoinAndSelect('feed.tags', 'tag');
       }
     }
 
@@ -124,7 +152,7 @@ export class FeedService {
       limit,
       tagId,
       userId,
-      loginId,
+      isFavorite: isFavorite === 'true',
       data,
     };
   }
@@ -183,12 +211,16 @@ export class FeedService {
   }
 
   async createFeed(data: FeedDto) {
-    const { title, body, userId } = data;
-    const tags = await this.tagRepository.findByIds(data.tagIds);
+    const { title, description, body, userId } = data;
+    const { tagList } = data;
+
+    const tags = await saveTags(tagList, this.tagRepository);
+
     const feed = new Feed();
 
     feed.title = title;
     feed.body = body;
+    feed.description = description;
     feed.userId = userId;
     feed.tags = tags;
 
@@ -196,8 +228,9 @@ export class FeedService {
   }
 
   async updateFeed(id: number, data: FeedDto) {
-    const tags = await this.tagRepository.findByIds(data.tagIds);
+    const { tagList } = data;
     const feed = await this.feedRepository.findOne(id);
+    const tags = await saveTags(tagList, this.tagRepository);
     feed.tags = tags;
 
     const updated = Object.assign(feed, data);
