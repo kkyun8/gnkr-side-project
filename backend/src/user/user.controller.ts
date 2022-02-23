@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserDto } from 'src/dto/user';
+import { UserDto, UserSettingsDto } from 'src/dto/user';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, getLoginId } from 'src/auth/jwt-auth.guard';
 
@@ -33,9 +33,11 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
-  updateUser(@Param('id') id: number, @Body() data: UserDto) {
-    return this.service.updateUser(id, data);
+  @Put()
+  updateUser(@Request() req, @Body() data: UserSettingsDto) {
+    const loginId = getLoginId(req);
+
+    return this.service.updateUser(loginId, data);
   }
 
   @UseGuards(JwtAuthGuard)

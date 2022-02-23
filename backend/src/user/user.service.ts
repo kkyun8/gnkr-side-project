@@ -9,10 +9,14 @@ import { Follows } from './follows.entity';
 export const saltOrRounds = 10;
 
 const setIsFollowing = async (
-  followerId: number,
+  followerId: number | undefined,
   followingId: number,
   repository: any,
 ): Promise<boolean> => {
+  if (!followerId) {
+    return false;
+  }
+
   const follow = await repository.findOne({
     where: { followerId, followingId },
   });
@@ -62,7 +66,11 @@ export class UserService {
     const updated: User = Object.assign(user, data);
     updated.password = hash;
 
-    return this.userRepository.save(user);
+    const save = await this.userRepository.save(user);
+    const { name, image } = save;
+    return {
+      user: { id, name, image },
+    };
   }
 
   async deleteUser(id: number) {
@@ -73,7 +81,7 @@ export class UserService {
     const loginUser = await this.userRepository.findOne(loginId);
     const user = await this.userRepository.findOne(id);
 
-    const followerId = loginUser.id;
+    const followerId = loginUser?.id;
     const followingId = user.id;
 
     const isFollowing = await setIsFollowing(
@@ -83,6 +91,8 @@ export class UserService {
     );
 
     user.isFollowing = isFollowing;
+    user.isLoginUser = id == loginId;
+    delete user.password;
     return user;
   }
 
@@ -198,6 +208,7 @@ export class UserService {
 
     return { follow, following };
   }
+
   async findOne(email: string, password: string): Promise<User | string> {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
