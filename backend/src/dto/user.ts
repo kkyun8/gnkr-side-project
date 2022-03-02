@@ -13,7 +13,7 @@ export class UserSettingsDto {
   @ApiProperty()
   readonly email: string;
   @ApiProperty()
-  readonly password: string;
+  password: string;
   @ApiProperty()
   readonly name: string;
   @ApiProperty()

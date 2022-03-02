@@ -3,7 +3,7 @@ import { Injectable, HttpStatus } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
-import { UserDto } from 'src/dto/user';
+import { UserDto, UserSettingsDto } from 'src/dto/user';
 import { HttpException } from '@nestjs/common/exceptions/http.exception';
 import { Follows } from './follows.entity';
 export const saltOrRounds = 10;
@@ -59,12 +59,16 @@ export class UserService {
     return this.userRepository.save({ email, password: hash, name });
   }
 
-  async updateUser(id: number, data: UserDto) {
-    const hash = await bcrypt.hash(data.password, saltOrRounds);
+  async updateUser(id: number, data: UserSettingsDto) {
+    const { password } = data;
+    delete data.password;
     const user = await this.userRepository.findOne(id);
-
     const updated: User = Object.assign(user, data);
-    updated.password = hash;
+
+    if (!password) {
+      const hash = await bcrypt.hash(data.password, saltOrRounds);
+      updated.password = hash;
+    }
 
     const save = await this.userRepository.save(user);
     const { name, image } = save;
