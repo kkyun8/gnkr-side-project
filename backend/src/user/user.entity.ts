@@ -61,6 +61,7 @@ export class User {
 
   isFollower: boolean;
   isFollowing: boolean;
+  isLoginUser?: boolean;
 
   //  TODO: mysqlに変更する場合、datetime -> timestampに変更
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
