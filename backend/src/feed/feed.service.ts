@@ -80,10 +80,6 @@ export class FeedService {
     const skippedItems = (feedPaginationDto.page - 1) * feedPaginationDto.limit;
     const { page, limit, tagId, userId, isFavorite } = feedPaginationDto;
 
-    const count = this.feedRepository
-      .createQueryBuilder('feed')
-      .select('COUNT(feed.id)', 'count');
-
     const feed = this.feedRepository
       .createQueryBuilder('feed')
       .orderBy('feed.id', 'DESC')
@@ -103,10 +99,6 @@ export class FeedService {
         feed
           .innerJoinAndSelect('feed.user', 'user')
           .where('user.id = :userId', { userId });
-
-        count
-          .innerJoinAndSelect('feed.user', 'user')
-          .where('user.id = :userId', { userId });
       } else {
         feed.leftJoinAndSelect('feed.user', 'user');
       }
@@ -115,16 +107,12 @@ export class FeedService {
         feed
           .innerJoinAndSelect('feed.tags', 'tag')
           .where('tag.id = :tagId', { tagId });
-
-        count
-          .innerJoinAndSelect('feed.tags', 'tag')
-          .where('tag.id = :tagId', { tagId });
       } else {
         feed.leftJoinAndSelect('feed.tags', 'tag');
       }
     }
 
-    const totalCount = await count.getCount();
+    const totalCount = await feed.getCount();
 
     let data = await feed.getMany();
 
