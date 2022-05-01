@@ -39,8 +39,7 @@ export class UserService {
 
     const dup = await this.userRepository
       .createQueryBuilder()
-      .where('name = :name', { name })
-      .orWhere('email = :email', { email })
+      .where('email = :email', { email })
       .getOne();
 
     if (dup) {
@@ -65,7 +64,7 @@ export class UserService {
     const user = await this.userRepository.findOne(id);
     const updated: User = Object.assign(user, data);
 
-    if (!password) {
+    if (password) {
       const hash = await bcrypt.hash(data.password, saltOrRounds);
       updated.password = hash;
     }
